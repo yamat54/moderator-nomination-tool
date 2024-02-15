@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>司会指名ツール</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="mt-4 mb-4">司会指名ツール</h2>
+
+      <button class="btn btn-primary mr-2" onclick="nominateRandomName()">
+        司会を指名する
+      </button>
+      <button class="btn btn-secondary" onclick="resetExcludedNames()">
+        リセット
+      </button>
+
+      <h3 class="mt-4 mb-3">除外リスト</h3>
+      <div id="excludedNamesList"></div>
+    </div>
+
+    <script>
+      // namesをグローバル変数として定義
+      const names = [
+        "name1",
+        "name2",
+        "name3",
+        "name4",
+        "name5",
+      ];
+
+      // 初回のページ読み込み時に除外リストを表示
+      $(document).ready(function () {
+        displayExcludedNames();
+      });
+
+      function displayExcludedNames() {
+        // 保存された指名された名前を取得
+        const excludedNamesJSON = localStorage.getItem("excludedNames");
+        const excludedNames = excludedNamesJSON
+          ? JSON.parse(excludedNamesJSON)
+          : [];
+
+        // チェックボックス一覧を表示
+        const excludedNamesListDiv = $("#excludedNamesList");
+        excludedNamesListDiv.empty();
+        names.forEach((name) => {
+          const checkbox = $("<input>")
+            .attr({
+              type: "checkbox",
+              class: "mr-2",
+              id: `excludedName${name}`,
+              checked: excludedNames.includes(name),
+            })
+            .on("click", function () {
+              // チェックボックスがクリックされたときに呼び出される関数
+              toggleExcludedName(name);
+            });
+
+          const label = $("<label>").append(checkbox, ` ${name}`);
+          excludedNamesListDiv.append(label);
+        });
+      }
+
+      // ランダムなインデックスを返す関数
+      function getRandomIndex(max) {
+        return Math.floor(Math.random() * max);
+      }
+
+      function nominateRandomName() {
+        // 保存された指名された名前を取得
+        const excludedNamesJSON = localStorage.getItem("excludedNames");
+        const excludedNames = excludedNamesJSON
+          ? JSON.parse(excludedNamesJSON)
+          : [];
+
+        // 除外された名前を考慮してランダムに1つの名前を選ぶ
+        const availableNames = names.filter(
+          (name) => !excludedNames.includes(name)
+        );
+
+        if (availableNames.length === 0) {
+          alert("すべての名前が指名されています。リセットしてください");
+          return;
+        }
+
+        const randomIndex = getRandomIndex(availableNames.length);
+        const selectedName = availableNames[randomIndex];
+
+        // 選ばれた名前を除外リストに追加
+        excludedNames.push(selectedName);
+
+        // 除外リストを保存
+        localStorage.setItem("excludedNames", JSON.stringify(excludedNames));
+
+        // アラートで選ばれた名前を表示
+        alert(`指名された名前: ${selectedName}`);
+
+        // 一覧を再度表示
+        displayExcludedNames();
+      }
+
+      // チェックボックスの状態を切り替える関数
+      function toggleExcludedName(name) {
+        const excludedNamesJSON = localStorage.getItem("excludedNames");
+        let excludedNames = excludedNamesJSON
+          ? JSON.parse(excludedNamesJSON)
+          : [];
+
+        const index = excludedNames.indexOf(name);
+        if (index !== -1) {
+          // チェックが入っていた場合は削除
+          excludedNames.splice(index, 1);
+        } else {
+          // チェックが入っていなかった場合は追加
+          excludedNames.push(name);
+        }
+
+        // 除外リストを保存
+        localStorage.setItem("excludedNames", JSON.stringify(excludedNames));
+
+        // 一覧を再度表示
+        displayExcludedNames();
+      }
+
+      // リセットボタンをクリックしたときに実行される関数
+      function resetExcludedNames() {
+        // localStorageから除外リストを削除
+        localStorage.removeItem("excludedNames");
+
+        // 一覧を再度表示
+        displayExcludedNames();
+      }
+    </script>
+  </body>
+</html>
